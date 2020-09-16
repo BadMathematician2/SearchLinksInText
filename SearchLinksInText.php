@@ -12,6 +12,11 @@ class SearchLinksInText
     /**
      * @var array
      */
+    private $except = [];
+
+    /**
+     * @var array
+     */
     private $links = [];
 
     /**
@@ -21,11 +26,7 @@ class SearchLinksInText
     public function searchLinks(string $text) : array
     {
         $this->recordLinks($text);
-
         $this->deleteInvalidLinks();
-
-        dd($this->links);
-
 
         return $this->links;
     }
@@ -42,19 +43,19 @@ class SearchLinksInText
         while ($start < strlen($text)) {
             $start = $this->start($text, $start + $length);
             $length = $this->linkLength($text, $start);
-            $this->links[substr($text, $start, $length)] = [$start, $start + $length];
+            $this->links[substr($text, $start, $length)][] = [$start, $start + $length];
         }
 
         return $this->links;
     }
 
     /**
-     * Знаходить номер першого входження https:// or https://
+     * Знаходить номер першого входження https:// або https://
      * @param string $text
-     * @param $start
+     * @param int $start
      * @return mixed
      */
-    private function start(string $text, $start)
+    private function start(string $text, int $start)
     {
         $text = substr($text, $start);
         return $start + min($this->strpos($text, 'http://'), $this->strpos($text, 'https://'));
@@ -62,19 +63,28 @@ class SearchLinksInText
 
     /**
      * @param string $text
-     * @param $start
+     * @param int $start
      * @return int
      */
-    private function linkLength(string $text, $start) : int
+    private function linkLength(string $text, int $start) : int
     {
         $text = substr($text, $start);
-        return min($this->strpos($text, ' '), $this->strpos($text, '\''), $this->strpos($text, '"'));
+        $symbols = [' ', '\'', '"', ';', PHP_EOL];
+        $min = strlen($text);
+        foreach ($symbols as $symbol) {
+            $min = min($min, $this->strpos($text,$symbol));
+        }
+
+        return $min;
     }
 
     private function deleteInvalidLinks()
     {
         foreach ($this->links as $key => $value) {
             if (! strpos($key, '.')) {
+                unset($this->links[$key]);
+            }
+            if (in_array(strrchr($key, '.'), $this->except)) {
                 unset($this->links[$key]);
             }
         }
