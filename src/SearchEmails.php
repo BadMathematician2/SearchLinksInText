@@ -3,16 +3,37 @@
 
 namespace SearchInText;
 
-
+/**
+ * Class SearchEmails
+ * @package SearchInText
+ */
 class SearchEmails
 {
-
+    /**
+     * @var array
+     */
     private $email = [];
+
+    /**
+     * @var array
+     */
+    private $invalid_symbols;
+
+    /**
+     * SearchEmails constructor.
+     */
+    public function __construct()
+    {
+        $this->invalid_symbols = array_merge(range(32, 44),
+            range(58, 63),
+            range(91, 94),
+            range(123, 126),
+            [10, 47, 96, ]);
+    }
 
     public function searchEmails($text)
     {
         $this->recordEmail($text);
-        dd($this->email);
         $this->deleteInvalidLinks();
 
         return $this->email;
@@ -24,14 +45,14 @@ class SearchEmails
      */
     private function recordEmail(string $text) : array
     {
-        $start = 0;
-        $length = 0;
+        $center = 0;
+        $right_length = 0;
 
-        while ($start < strlen($text)) {
-            $start = $this->center($text, $start + $length);
-            $length = $this->rightLength($text, $start);
-            $left_length = $this->leftLength($text, $start);
-            $this->email[substr($text, $left_length, $start - $left_length) . substr($text, $start, $length)][] = [$start, $start + $length];
+        while ($center + $right_length < strlen($text)) {
+            $center = $this->center($text, $center + $right_length);
+            $right_length = $this->rightLength($text, $center);
+            $left_end = $this->leftEnd($text, $center);
+            $this->email[substr($text, $left_end, $center - $left_end) . substr($text, $center, $right_length)][] = [$left_end, $center + $right_length];
         }
 
         return $this->email;
@@ -56,10 +77,9 @@ class SearchEmails
     private function rightLength(string $text, int $start) : int
     {
         $text = substr($text, $start);
-        $symbols = [' ', '\'', '"', ';', PHP_EOL];
         $min = strlen($text);
-        foreach ($symbols as $symbol) {
-            $min = min($min, $this->strpos($text,$symbol));
+        foreach ($this->invalid_symbols as $symbol) {
+            $min = min($min, $this->strpos($text,chr($symbol)));
         }
 
         return $min;
@@ -70,13 +90,12 @@ class SearchEmails
      * @param int $end
      * @return int
      */
-    private function leftLength(string $text, int $end) : int
+    private function leftEnd(string $text, int $end) : int
     {
         $text = substr($text, 0, $end);
-        $symbols = [' ', '\'', '"', ';', PHP_EOL];
         $max = 0;
-        foreach ($symbols as $symbol) {
-            $max = max($max, $this->strrpos($text, $symbol));
+        foreach ($this->invalid_symbols as $symbol) {
+            $max = max($max, $this->strrpos($text, chr($symbol)));
         }
 
         return $max + 1;
@@ -85,7 +104,10 @@ class SearchEmails
     private function deleteInvalidLinks()
     {
         foreach ($this->email as $key => $value) {
-            if (! strpos($key, '.')) {
+            if (! strpos(strstr($key, '@'), '.')) {
+                unset($this->email[$key]);
+            }
+            if (strpos($key, '..')) {
                 unset($this->email[$key]);
             }
 
