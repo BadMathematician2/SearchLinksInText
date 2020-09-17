@@ -1,13 +1,13 @@
 <?php
 
 
-namespace App\Packages\SearchLinksInText;
+namespace SearchInText;
 
 /**
- * Class SearchLinksInText
- * @package App\Packages\SearchLinksInText
+ * Class SearchInText
+ * @package App\Packages\SearchInText
  */
-class SearchLinksInText
+class SearchLinks
 {
     /**
      * @var array
