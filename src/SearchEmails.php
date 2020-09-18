@@ -31,7 +31,11 @@ class SearchEmails
             [10, 47, 96, ]);
     }
 
-    public function searchEmails($text)
+    /**
+     * @param string $text
+     * @return array
+     */
+    public function searchEmails(string $text) : array
     {
         $this->recordEmail($text);
         $this->deleteInvalidLinks();
@@ -61,11 +65,12 @@ class SearchEmails
     /**
      * @param string $text
      * @param int $start
-     * @return mixed
+     * @return int
      */
-    private function center(string $text, int $start)
+    private function center(string $text, int $start) : int
     {
         $text = substr($text, $start);
+
         return $start + $this->strpos($text, '@');
     }
 

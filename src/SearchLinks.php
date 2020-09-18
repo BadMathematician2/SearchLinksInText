@@ -53,9 +53,9 @@ class SearchLinks
      * Знаходить номер першого входження https:// або https://
      * @param string $text
      * @param int $start
-     * @return mixed
+     * @return int
      */
-    private function start(string $text, int $start)
+    private function start(string $text, int $start) : int
     {
         $text = substr($text, $start);
         return $start + min($this->strpos($text, 'http://'), $this->strpos($text, 'https://'));
